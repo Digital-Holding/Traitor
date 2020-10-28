@@ -266,23 +266,38 @@ class AbstractTreeHandler implements Handler
     protected function addExtendedInterface()
     {
         $line = $this->getInterfaceLine();
+        $lastExtendedInterfaceLine = $this->getLastExtendedInterfaceLine();
 
         if ($this->alreadyExtendsInterface()) {
             return $this;
         }
 
         $newInterfaceExtend = substr($this->content[$line], 0, -1) . ' extends ' . $this->prefix . $this->traitShortName . "\n";
-
         $interfaceLineLength = strlen($this->content[$line]);
-
         $newCommaSeparator = substr_replace($this->content[$line], ',', $interfaceLineLength - 1, 0);
 
         if (false !== strpos($this->content[$line], 'extends')) {
             $newInterfaceExtend = $this->prefix . $this->traitShortName . "\n";
+            $interfaceLineLength = strlen($this->content[$lastExtendedInterfaceLine]);
+            $newCommaSeparator = substr_replace($this->content[$lastExtendedInterfaceLine], ',', $interfaceLineLength - 1, 0);
 
-            array_splice($this->content, $line, 0, $newCommaSeparator);
-            array_splice($this->content, $line + 1, 0, $newInterfaceExtend);
-            unset($this->content[$line + 2]);
+
+            if (false !== strpos($this->content[$line + 1], '{' )) {
+                $interfaceLineLength = strlen($this->content[$line]);
+                $newCommaSeparator = substr_replace($this->content[$line], ',', $interfaceLineLength - 1, 0);
+
+                array_splice($this->content, $lastExtendedInterfaceLine, 0, $newCommaSeparator);
+                array_splice($this->content, $lastExtendedInterfaceLine + 1, 0, $newInterfaceExtend);
+                unset($this->content[$line]);
+            }
+            else{
+                $interfaceLineLength = strlen($this->content[$lastExtendedInterfaceLine]);
+                $newCommaSeparator = substr_replace($this->content[$lastExtendedInterfaceLine], ',', $interfaceLineLength - 1, 0);
+
+                array_splice($this->content, $lastExtendedInterfaceLine, 0, $newCommaSeparator);
+                array_splice($this->content, $lastExtendedInterfaceLine + 1, 0, $newInterfaceExtend);
+                unset($this->content[$lastExtendedInterfaceLine + 2]);
+            }
 
             return $this;
         }
@@ -597,13 +612,27 @@ class AbstractTreeHandler implements Handler
      */
     protected function getInterfaceLine()
     {
-        for ($line = 0; $line < count($this->content); $line++) {
-            if (strpos($this->content[$line], '{') !== false) {
-                return $line - 1;
-            }
+        $interface = reset($this->classes);
+        return $interface->getAttributes()['startLine'] - 1;
+    }
+
+    /**
+     * @return int
+     * @throws Exception
+     */
+    protected function getLastExtendedInterfaceLine()
+    {
+        /** @var Interface_ $interface */
+        $interface = reset($this->classes);
+
+        if (true !== empty($interface->extends)) {
+            /** @var Name $lastExtendedInterface */
+            $lastExtendedInterface = reset($interface->extends);
+
+            return $lastExtendedInterface->getAttribute('startLine');
         }
 
-        throw new Exception("Interface not found in class [$this->classShortName]");
+        return $interface->getAttribute('startLine');
     }
 
     /**
