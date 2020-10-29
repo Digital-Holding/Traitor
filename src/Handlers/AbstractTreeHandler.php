@@ -278,14 +278,8 @@ class AbstractTreeHandler implements Handler
 
         if (false !== strpos($this->content[$line], 'extends')) {
             $newInterfaceExtend = $this->prefix . $this->traitShortName . "\n";
-            $interfaceLineLength = strlen($this->content[$lastExtendedInterfaceLine]);
-            $newCommaSeparator = substr_replace($this->content[$lastExtendedInterfaceLine], ',', $interfaceLineLength - 1, 0);
-
 
             if (false !== strpos($this->content[$line + 1], '{' )) {
-                $interfaceLineLength = strlen($this->content[$line]);
-                $newCommaSeparator = substr_replace($this->content[$line], ',', $interfaceLineLength - 1, 0);
-
                 array_splice($this->content, $lastExtendedInterfaceLine, 0, $newCommaSeparator);
                 array_splice($this->content, $lastExtendedInterfaceLine + 1, 0, $newInterfaceExtend);
                 unset($this->content[$line]);
