@@ -279,12 +279,11 @@ class AbstractTreeHandler implements Handler
         if (false !== strpos($this->content[$line], 'extends')) {
             $newInterfaceExtend = $this->prefix . $this->traitShortName . "\n";
 
-            if (false !== strpos($this->content[$line + 1], '{' )) {
+            if (false !== strpos($this->content[$line + 1], '{')) {
                 array_splice($this->content, $lastExtendedInterfaceLine, 0, $newCommaSeparator);
                 array_splice($this->content, $lastExtendedInterfaceLine + 1, 0, $newInterfaceExtend);
                 unset($this->content[$line]);
-            }
-            else{
+            } else {
                 $interfaceLineLength = strlen($this->content[$lastExtendedInterfaceLine - 1]);
                 $newCommaSeparator = substr_replace($this->content[$lastExtendedInterfaceLine - 1], ',', $interfaceLineLength - 1, 0);
 
@@ -342,6 +341,9 @@ class AbstractTreeHandler implements Handler
             return $this;
         }
 
+        $interface = reset($this->classes);
+        $numberOfExtends = count($interface->extends);
+
         /** @var Name $statement */
         foreach ($extendedImports as $statement) {
             foreach ($statement->parts as $extendImport) {
@@ -356,7 +358,11 @@ class AbstractTreeHandler implements Handler
 
                         $this->content[$statement->getLine()] = trim($interfaceWithoutExtend) . "\n";
                     } else if (substr($previousExtendImport, -2) == ",\n") {
-                        $newPreviousExtendImport = substr($this->content[$statement->getLine() - 1], 0, -2) . "\n";
+                        $newPreviousExtendImport = $this->content[$statement->getLine() - 1];
+
+                        if (1 === $numberOfExtends) {
+                            $newPreviousExtendImport = substr($this->content[$statement->getLine() - 1], 0, -2) . "\n";
+                        }
 
                         unset($this->content[$statement->getLine()]);
                         unset($this->content[$statement->getLine() - 1]);
