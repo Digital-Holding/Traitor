@@ -360,8 +360,8 @@ class AbstractTreeHandler implements Handler
                     } else if (substr($previousExtendImport, -2) == ",\n") {
                         $newPreviousExtendImport = $this->content[$statement->getLine() - 1];
 
-                        if (1 === $numberOfExtends) {
-                            $newPreviousExtendImport = substr($this->content[$statement->getLine() - 1], 0, -2) . "\n";
+                        if (2 >= $numberOfExtends) {
+                            $newPreviousExtendImport = substr($newPreviousExtendImport, 0, -2) . "\n";
                         }
 
                         unset($this->content[$statement->getLine()]);
