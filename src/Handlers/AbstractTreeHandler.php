@@ -343,6 +343,11 @@ class AbstractTreeHandler implements Handler
 
         $interface = reset($this->classes);
         $numberOfExtends = count($interface->extends);
+        $extendLines = [];
+
+        foreach ($interface->extends as $extend) {
+            array_push($extendLines, $extend->getAttributes());
+        }
 
         /** @var Name $statement */
         foreach ($extendedImports as $statement) {
@@ -360,8 +365,11 @@ class AbstractTreeHandler implements Handler
                     } else if (substr($previousExtendImport, -2) == ",\n") {
                         $newPreviousExtendImport = $this->content[$statement->getLine() - 1];
 
-                        if (2 >= $numberOfExtends) {
-                            $newPreviousExtendImport = substr($newPreviousExtendImport, 0, -2) . "\n";
+                        $previousExtendImportLine =  array_search($statement->getLine() - 1, array_column($extendLines, 'startLine'));
+                        $nexExtendImportLine = array_search($statement->getLine() + 1, array_column($extendLines, 'endLine'));
+
+                        if (2 >= $numberOfExtends || ($previousExtendImportLine && !$nexExtendImportLine)) {
+                            $newPreviousExtendImport = substr($this->content[$statement->getLine() - 1], 0, -2) . "\n";
                         }
 
                         unset($this->content[$statement->getLine()]);
